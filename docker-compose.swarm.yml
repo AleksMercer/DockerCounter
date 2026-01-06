@@ -1,0 +1,70 @@
+version: "3.8"
+
+services:
+  app:
+    # Используем предварительно собранный образ для ускорения деплоя в Swarm
+    image: counter-app:latest
+
+    # Переменные окружения для подключения к Redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+    # Проброс портов с использованием swarm-режима
+    ports:
+      - target: 8000
+        published: 80
+        protocol: tcp
+        mode: ingress
+
+    # Подключаемся к overlay-сети для связи между сервисами
+    networks:
+      - app-network
+
+    # Конфигурация развертывания в Swarm
+    deploy:
+      replicas: 4
+      restart_policy:
+        condition: any
+      update_config:
+        parallelism: 2
+        delay: 10s
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  redis:
+    # Используем официальный образ Redis
+    image: redis:7-alpine
+
+    # Параметры запуска Redis
+    command: ["redis-server", "--appendonly", "yes"]
+
+    # Том для сохранения данных Redis
+    volumes:
+      - redis-data:/data
+
+    # Сеть для связи с другими сервисами
+    networks:
+      - app-network
+
+    # Конфигурация развертывания Redis в Swarm
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+          - node.role == manager
+
+# Overlay-сеть для связи сервисов в кластере
+networks:
+  app-network:
+    driver: overlay
+    attachable: true
+
+# Тома для хранения данных
+volumes:
+  redis-data:
+    driver: local

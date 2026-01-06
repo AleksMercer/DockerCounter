@@ -1,22 +1,22 @@
 services:
   app:
     build:
-      context: ./
+      context: ./ # Контекст сборки - текущая директория
       dockerfile: Dockerfile
     env_file:
-      - ./backend/.env
+      - ./backend/.env # Файл с переменными окружения
     ports:
-      - "80:8000"
+      - "80:8000" # Проброс порта для локальной разработки
     depends_on:
-      - redis
-    restart: always
+      - redis # Зависимость от Redis
+    restart: always # Автоматический перезапуск при падении
 
   redis:
     image: redis:7-alpine
     command: ["redis-server", "--save", "60", "1", "--appendonly", "yes"]
     volumes:
-      - redis_data:/data
+      - redis_data:/data # Том для сохранения данных Redis
     restart: always
 
 volumes:
-  redis_data:
+  redis_data: # Именованный том для данных Redis

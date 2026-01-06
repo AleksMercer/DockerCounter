@@ -3,16 +3,23 @@ version: "3.8"
 services:
   app:
     image: counter-app:latest
+
+    # Переменные окружения
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+
+    # Публикация портов в Swarm
     ports:
       - target: 8000
         published: 80
         protocol: tcp
         mode: ingress
+
     networks:
       - app-network
+
+    # Конфигурация развертывания в Swarm
     deploy:
       replicas: 4
       restart_policy:
@@ -30,10 +37,12 @@ services:
       restart_policy:
         condition: any
 
+# Overlay-сеть для связи между сервисами в разных нодах
 networks:
   app-network:
     driver: overlay
 
+# Том для данных Redis
 volumes:
   redis-data:
     driver: local
