@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  app:
+    image: counter-app:latest
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - target: 8000
+        published: 80
+        protocol: tcp
+        mode: ingress
+    networks:
+      - app-network
+    deploy:
+      replicas: 4
+      restart_policy:
+        condition: any
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+networks:
+  app-network:
+    driver: overlay
+
+volumes:
+  redis-data:
+    driver: local
